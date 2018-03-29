@@ -8,15 +8,20 @@ server_host = ''
 
 def main():
     connection_socket = create_connection_socket()
+
     quit_loop = False
     while not quit_loop:
 
-        ftp_input = get_input()
+        print "FTP>"
+        ftp_input = raw_input()
+        ftp_input = ftp_input.split()
 
         if len(ftp_input) == 1:
             quit_loop = len_one_input(ftp_input)
+
         elif len(ftp_input) == 2:
             len_two_input(ftp_input)
+
         else:
             print "Unrecognized set of commands"
 
@@ -27,13 +32,13 @@ def main():
         data_length = len(data)
 
         data_socket = create_data_socket()
-        data_socket.connect((server_host, data_port))
         data_socket.send(str(data_length))
 
         #to keep second data transmission (data) from being part of first (data_length)
         sleep(0.005)
 
         send_data(data, data_socket)
+
         data_socket.close()
     connection_socket.close()
 
@@ -45,22 +50,15 @@ def create_connection_socket():
     connection_socket.connect((server_host, connection_port))
     return connection_socket
 
-
-def get_input():
-    print "FTP>"
-    ftp_input = raw_input()
-    ftp_input = ftp_input.split()
-    return ftp_input
-
-
 def len_one_input(ftp_input):
     quit_loop = False
-    if ftp_input[0] == "ls":
+    if ftp_input[0] == "":
+        print "no command given"
+    elif ftp_input[0] == "ls":
         ls()
     elif ftp_input[0] == "quit":
         quit_loop = True
     return quit_loop
-
 
 def len_two_input(ftp_input):
     if ftp_input[0] == "get":
@@ -75,14 +73,13 @@ def len_two_input(ftp_input):
 def create_data_socket():
     data_socket = socket(AF_INET, SOCK_STREAM)
     data_socket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
+    data_socket.connect((server_host, data_port))
     return data_socket
 
-
-def send_data(data, data_socket):
+def send_data(data, socket):
     data_sent = 0
     while data_sent != len(data):
-        data_sent += data_socket.send(data[data_sent])
-
+        data_sent += socket.send(data[data_sent])
 
 def ls():
     print "ls"
