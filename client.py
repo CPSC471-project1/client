@@ -61,18 +61,26 @@ def create_connection_socket():
 def len_one_input(ftp_input, connection_socket):
     quit_loop = False
     if ftp_input[0] == "":
-        print "no command given"
+        print "No Command Given"
     elif ftp_input[0] == "ls":
         ls()
-        connection_socket.send("ls")
+	connection_socket.send("ls")
     elif ftp_input[0] == "quit":
         quit_loop = True
+    elif ftp_input[0] == "get":
+	print "Need filename when using \"get\""
+    elif ftp_input[0] == "put":
+	print "Need filename when using \"put\""
+    else:
+        print ftp_input[0] + " Is not a recognized command"
     return quit_loop
 
 
 def len_two_input(ftp_input, connection_socket):
     if ftp_input[0] == "get":
+	
         connection_socket.send("get" + " " + ftp_input[1]) # Might be better to do ftp_input[0] + " " + ftp_input[1]
+	
         get(ftp_input[1])
 
     elif ftp_input[0] == "put":
@@ -113,7 +121,9 @@ def get(filename):
     print filename
     data_socket = create_data_socket()
     data_length = receive_data_length(data_socket)
+  
     data = receive_data(data_socket, data_length)
+    
     write_file(data, filename)
 
 
@@ -135,7 +145,9 @@ def put(filename):
     while tmpbuffer: # While there is still information in the file, continue to iterate more and more data.
         data += tmpbuffer
         tmpbuffer = f.readline()
+    sleep(0.005)
     send_data(data, data_socket)
+    sleep(0.005)
 
 
 # Receive length of data
@@ -152,9 +164,9 @@ def receive_data(socket, data_length):
     tmpbuffer = ""
     data = ""
     print(data_length)
-    while len(data) < int(data_length):
+    while len(data) < float(data_length):
         print("receiving")
-        tmpbuffer = socket.recv(3000)
+        tmpbuffer = socket.recv(30000)
         data += tmpbuffer
     print("Returning data")
     return data
