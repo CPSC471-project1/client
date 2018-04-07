@@ -114,10 +114,10 @@ def send_data(data, socket):  # By keeping track of the amount of data sent, slo
 # Does it have to display the client directory? Or the server's?
 def ls():
     print("in LS")
+    sleep(0.005)
     data_socket = create_data_socket()
     dir_size = receive_data_length(data_socket)
     data = receive_data(data_socket, dir_size)
-    sleep(0.005)
     print("Server Directory:")
     print data
     data_socket.close()
@@ -126,6 +126,7 @@ def ls():
 # Get file of filename from the server.
 def get(filename):
     print filename
+    sleep(0.005)
     data_socket = create_data_socket()
     data_length = receive_data_length(data_socket)
 
@@ -137,6 +138,7 @@ def get(filename):
 # Put file of name filename onto the server's directory.
 def put(filename):
     print filename
+    sleep(0.005)
     tmpbuffer = ""
     data = ""
 
