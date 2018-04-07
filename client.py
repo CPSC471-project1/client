@@ -1,6 +1,7 @@
 from socket import socket, AF_INET, SOCK_STREAM, SOL_SOCKET, SO_REUSEADDR
 from time import sleep
 import os
+
 connection_port = 1025
 data_port = 1024
 server_host = "localhost"
@@ -59,18 +60,20 @@ def create_connection_socket():
 # If we have to check the directory of the server, then leave connection socket as a part of function below.
 # Otherwise, remove.
 def len_one_input(ftp_input, connection_socket):
+    print("In len_one_input")
     quit_loop = False
     if ftp_input[0] == "":
         print "No Command Given"
     elif ftp_input[0] == "ls":
+        print("Perform ls")
+        connection_socket.send("ls")
         ls()
-	connection_socket.send("ls")
     elif ftp_input[0] == "quit":
         quit_loop = True
     elif ftp_input[0] == "get":
-	print "Need filename when using \"get\""
+        print "Need filename when using \"get\""
     elif ftp_input[0] == "put":
-	print "Need filename when using \"put\""
+        print "Need filename when using \"put\""
     else:
         print ftp_input[0] + " Is not a recognized command"
     return quit_loop
@@ -78,9 +81,9 @@ def len_one_input(ftp_input, connection_socket):
 
 def len_two_input(ftp_input, connection_socket):
     if ftp_input[0] == "get":
-	
-        connection_socket.send("get" + " " + ftp_input[1]) # Might be better to do ftp_input[0] + " " + ftp_input[1]
-	
+
+        connection_socket.send("get" + " " + ftp_input[1])  # Might be better to do ftp_input[0] + " " + ftp_input[1]
+
         get(ftp_input[1])
 
     elif ftp_input[0] == "put":
@@ -90,6 +93,7 @@ def len_two_input(ftp_input, connection_socket):
     else:
         print ftp_input[0] + "is not a recognized command"
 
+
 # Create socket for data to be transferred
 def create_data_socket():
     data_socket = socket(AF_INET, SOCK_STREAM)
@@ -98,7 +102,7 @@ def create_data_socket():
     return data_socket
 
 
-def send_data(data, socket): # By keeping track of the amount of data sent, slowly send over data.
+def send_data(data, socket):  # By keeping track of the amount of data sent, slowly send over data.
     data_sent = 0
     print("in send_data")
     while data_sent != len(data):
@@ -108,12 +112,11 @@ def send_data(data, socket): # By keeping track of the amount of data sent, slow
 # List directory of the client file. Could be fixed for a different directory?
 # Does it have to display the client directory? Or the server's?
 def ls():
-    print ("Client Directory:")
-    dirs = os.listdir(os.curdir)
-
-    for file in dirs:
-        print file
-
+    data_socket = create_data_socket()
+    dir_size = receive_data_length(data_socket)
+    data = receive_data(data_socket, dir_size)
+    print("Server Directory:")
+    print data
 
 
 # Get file of filename from the server.
@@ -121,9 +124,9 @@ def get(filename):
     print filename
     data_socket = create_data_socket()
     data_length = receive_data_length(data_socket)
-  
+
     data = receive_data(data_socket, data_length)
-    
+
     write_file(data, filename)
 
 
@@ -142,7 +145,7 @@ def put(filename):
     f = open(filename, "r")
     tmpbuffer = f.readline()
 
-    while tmpbuffer: # While there is still information in the file, continue to iterate more and more data.
+    while tmpbuffer:  # While there is still information in the file, continue to iterate more and more data.
         data += tmpbuffer
         tmpbuffer = f.readline()
     sleep(0.005)
@@ -173,7 +176,7 @@ def receive_data(socket, data_length):
 
 
 def write_file(data, filename):
-    f = open("test2.txt", "w+")
+    f = open(filename, "w+")
     f.write(data)
     f.close()
 
