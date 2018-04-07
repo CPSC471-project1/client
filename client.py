@@ -1,12 +1,16 @@
 from socket import socket, AF_INET, SOCK_STREAM, SOL_SOCKET, SO_REUSEADDR
 from time import sleep
-import os
+import os, sys
 
-connection_port = 1025
-data_port = 1024
-server_host = "localhost"
+program_name = sys.argv[0]
+arguement = sys.argv[1:]
+count = len(arguement)
+
+connection_port = int(sys.argv[2])
+data_port = connection_port - 1
+server_host = sys.argv[1]
 # Path to file location below. Change to suit your needs (Not used in current version).
-path = "C:/Python27/Files"
+
 
 
 def main():
@@ -68,7 +72,9 @@ def len_one_input(ftp_input, connection_socket):
         print("Perform ls")
         sleep(0.005)
         connection_socket.send("ls")
-        ls()
+	print "Server Directory:"
+        print ls()
+
     elif ftp_input[0] == "quit":
         quit_loop = True
     elif ftp_input[0] == "get":
@@ -82,15 +88,43 @@ def len_one_input(ftp_input, connection_socket):
 
 def len_two_input(ftp_input, connection_socket):
     if ftp_input[0] == "get":
-
-        connection_socket.send("get" + " " + ftp_input[1])  # Might be better to do ftp_input[0] + " " + ftp_input[1]
-
-        get(ftp_input[1])
+	connection_socket.send("ls")
+	sleep(0.01)
+	dirs = ls()
+	data = ""
+	x = 0
+	for file in dirs:
+	   data += file   
+	   if file == "\n":
+	      data = ""
+	  
+	   if data == ftp_input[1]:
+	      x = 1
+	
+        if x == 1:
+           connection_socket.send("get" + " " + ftp_input[1])
+	   sleep(0.1)
+           get(ftp_input[1])
+	   print "Success"
+	else:
+	   print "Failure"
 
     elif ftp_input[0] == "put":
         print("in put")
-        connection_socket.send("put" + " " + ftp_input[1])
-        put(ftp_input[1])
+	data = ""
+   	dirs = os.listdir(os.curdir)
+	x = 0
+    	for file in dirs:
+           data = file
+	   if data == ftp_input[1]:
+	      x = 1
+	   
+   	if x == 1:
+           connection_socket.send("put" + " " + ftp_input[1])
+           put(ftp_input[1])
+	   print "Success"
+	else:
+	   print "Failure"
     else:
         print ftp_input[0] + "is not a recognized command"
 
@@ -114,31 +148,29 @@ def send_data(data, socket):  # By keeping track of the amount of data sent, slo
 # Does it have to display the client directory? Or the server's?
 def ls():
     print("in LS")
-    sleep(0.005)
+    sleep(0.006)
     data_socket = create_data_socket()
     dir_size = receive_data_length(data_socket)
     data = receive_data(data_socket, dir_size)
-    print("Server Directory:")
-    print data
     data_socket.close()
+    return data
 
 
 # Get file of filename from the server.
 def get(filename):
-    print filename
-    sleep(0.005)
+    sleep(0.01)
     data_socket = create_data_socket()
     data_length = receive_data_length(data_socket)
 
     data = receive_data(data_socket, data_length)
 
+    print ("Filename: " + filename + "\nBytes: " + data_length)
     write_file(data, filename)
 
 
 # Put file of name filename onto the server's directory.
 def put(filename):
-    print filename
-    sleep(0.005)
+    sleep(0.006)
     tmpbuffer = ""
     data = ""
 
@@ -157,6 +189,7 @@ def put(filename):
     sleep(0.005)
     send_data(data, data_socket)
     sleep(0.005)
+    print ("Filename: " + filename + "\nBytes: " + str(file_size.st_size))
 
 
 # Receive length of data
@@ -169,10 +202,9 @@ def receive_data_length(socket):
 
 # Receive data until there is no more data to receive.
 def receive_data(socket, data_length):
-    print("in receive_data")
+    print("In receive_data")
     tmpbuffer = ""
     data = ""
-    print(data_length)
     while len(data) < float(data_length):
         print("receiving")
         tmpbuffer = socket.recv(30000)
