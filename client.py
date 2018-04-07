@@ -66,6 +66,7 @@ def len_one_input(ftp_input, connection_socket):
         print "No Command Given"
     elif ftp_input[0] == "ls":
         print("Perform ls")
+        sleep(0.005)
         connection_socket.send("ls")
         ls()
     elif ftp_input[0] == "quit":
@@ -112,11 +113,14 @@ def send_data(data, socket):  # By keeping track of the amount of data sent, slo
 # List directory of the client file. Could be fixed for a different directory?
 # Does it have to display the client directory? Or the server's?
 def ls():
+    print("in LS")
     data_socket = create_data_socket()
     dir_size = receive_data_length(data_socket)
     data = receive_data(data_socket, dir_size)
+    sleep(0.005)
     print("Server Directory:")
     print data
+    data_socket.close()
 
 
 # Get file of filename from the server.
